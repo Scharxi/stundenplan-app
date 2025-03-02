@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { Plus, RefreshCw } from "lucide-react";
+import { Plus, RefreshCw, Coffee } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -117,6 +117,14 @@ export function TimetableGrid() {
     return activeTimetable.subjects.find((subject) => subject.id === subjectId);
   };
 
+  // Hilfsfunktion zum Finden einer Pause für einen bestimmten Tag und Zeitslot
+  const findBreak = (day: Day, timeSlotId: string) => {
+    if (!activeTimetable || !activeTimetable.breaks) return undefined;
+    return activeTimetable.breaks.find(
+      (breakItem) => breakItem.timeSlotId === timeSlotId && breakItem.days.includes(day)
+    );
+  };
+
   // Hilfsfunktion zum Ermitteln der Farbstile für ein Fach
   const getSubjectColorStyles = (subject: Subject): React.CSSProperties => {
     if (!subject.color) {
@@ -171,6 +179,7 @@ export function TimetableGrid() {
             <p><strong>Entries:</strong> {activeTimetable.entries.length}</p>
             <p><strong>Time Slots:</strong> {activeTimetable.timeSlots.length}</p>
             <p><strong>Subjects:</strong> {activeTimetable.subjects.length}</p>
+            <p><strong>Breaks:</strong> {activeTimetable.breaks?.length || 0}</p>
             <div className="mt-2">
               <p><strong>Subjects Detail:</strong></p>
               <pre className="text-xs bg-gray-200 p-2 rounded">
@@ -181,6 +190,12 @@ export function TimetableGrid() {
               <p><strong>Entries Detail:</strong></p>
               <pre className="text-xs bg-gray-200 p-2 rounded">
                 {JSON.stringify(activeTimetable.entries, null, 2)}
+              </pre>
+            </div>
+            <div className="mt-2">
+              <p><strong>Breaks Detail:</strong></p>
+              <pre className="text-xs bg-gray-200 p-2 rounded">
+                {JSON.stringify(activeTimetable.breaks, null, 2)}
               </pre>
             </div>
           </div>
@@ -220,6 +235,7 @@ export function TimetableGrid() {
               {DAYS.map((day) => {
                 const entry = findEntry(day, timeSlot.id);
                 const subject = entry ? findSubject(entry.subjectId) : undefined;
+                const breakItem = findBreak(day, timeSlot.id);
 
                 return (
                   <div
@@ -252,6 +268,15 @@ export function TimetableGrid() {
                             <div className="mt-1 italic line-clamp-2 text-xs">{entry.notes}</div>
                           )}
                         </div>
+                      </motion.div>
+                    ) : breakItem ? (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="absolute inset-0 p-2 rounded-md cursor-default transition-all bg-gray-100 text-gray-800 border border-gray-200 flex flex-col items-center justify-center"
+                      >
+                        <Coffee className="h-6 w-6 mb-2 text-gray-600" />
+                        <div className="font-medium text-sm text-center">{breakItem.name}</div>
                       </motion.div>
                     ) : (
                       <TooltipProvider>

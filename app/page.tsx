@@ -1,17 +1,22 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { TimetableManager } from "@/components/timetable/timetable-manager";
 import { Toaster } from "sonner";
 import { useTimetableStore } from "@/lib/store";
 
 export default function Home() {
   const store = useTimetableStore();
+  const initialized = useRef(false);
 
   // Erstelle einen Beispiel-Stundenplan, wenn noch keiner existiert
   useEffect(() => {
+    // Prevent the effect from running more than once
+    if (initialized.current) return;
+    
     if (store.timetables.length === 0) {
       console.log("Erstelle Beispiel-Stundenplan...");
+      initialized.current = true;
       
       // Erstelle einen neuen Stundenplan
       store.createTimetable("Mein Stundenplan");
@@ -126,11 +131,28 @@ export default function Home() {
         
         console.log("Einträge erstellt:", entry1, entry2, entry3, entry4, entry5, entry6, entry7);
         
+        // Füge Beispiel-Pausen hinzu
+        const break1 = store.addBreak(timetableId, {
+          name: "Große Pause",
+          timeSlotId: timeSlot3,
+          days: ["monday", "tuesday", "wednesday", "thursday", "friday"]
+        });
+        
+        const break2 = store.addBreak(timetableId, {
+          name: "Mittagspause",
+          timeSlotId: timeSlot5,
+          days: ["monday", "wednesday", "thursday"]
+        });
+        
+        console.log("Pausen erstellt:", break1, break2);
+        
         // Setze den aktiven Stundenplan
         store.setActiveTimetable(timetableId);
         console.log("Aktiver Stundenplan gesetzt:", timetableId);
       }
-    } else {
+    } else if (!initialized.current) {
+      initialized.current = true;
+      
       // Aktualisiere bestehende Fächer, falls sie keine Farbe, Lehrer oder Raum haben
       store.timetables.forEach(timetable => {
         timetable.subjects.forEach(subject => {
@@ -170,7 +192,7 @@ export default function Home() {
         });
       });
     }
-  }, [store]);
+  }, []); // Empty dependency array - run only once on mount
 
   return (
     <div className="min-h-screen bg-background">

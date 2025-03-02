@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
-import { Day, Subject, TimeSlot, Timetable, TimetableEntry } from './types';
+import { Day, Subject, TimeSlot, Timetable, TimetableEntry, Break } from './types';
 
 interface TimetableState {
   timetables: Timetable[];
@@ -27,6 +27,11 @@ interface TimetableState {
   addEntry: (timetableId: string, entry: Omit<TimetableEntry, 'id'>) => string;
   updateEntry: (timetableId: string, id: string, data: Partial<Omit<TimetableEntry, 'id'>>) => void;
   deleteEntry: (timetableId: string, id: string) => void;
+
+  // Break actions
+  addBreak: (timetableId: string, breakItem: Omit<Break, 'id'>) => string;
+  updateBreak: (timetableId: string, id: string, data: Partial<Omit<Break, 'id'>>) => void;
+  deleteBreak: (timetableId: string, id: string) => void;
 }
 
 export const useTimetableStore = create<TimetableState>()(
@@ -45,7 +50,8 @@ export const useTimetableStore = create<TimetableState>()(
               name,
               entries: [],
               timeSlots: [],
-              subjects: []
+              subjects: [],
+              breaks: []
             }
           ],
           activeTimetableId: state.activeTimetableId || id
@@ -203,6 +209,50 @@ export const useTimetableStore = create<TimetableState>()(
               ? {
                   ...timetable,
                   entries: timetable.entries.filter((e) => e.id !== id)
+                }
+              : timetable
+          )
+        }));
+      },
+
+      // Break actions
+      addBreak: (timetableId, breakItem) => {
+        const id = uuidv4();
+        set((state) => ({
+          timetables: state.timetables.map((timetable) =>
+            timetable.id === timetableId
+              ? {
+                  ...timetable,
+                  breaks: [...(timetable.breaks || []), { id, ...breakItem }]
+                }
+              : timetable
+          )
+        }));
+        return id;
+      },
+      
+      updateBreak: (timetableId, id, data) => {
+        set((state) => ({
+          timetables: state.timetables.map((timetable) =>
+            timetable.id === timetableId
+              ? {
+                  ...timetable,
+                  breaks: (timetable.breaks || []).map((breakItem) =>
+                    breakItem.id === id ? { ...breakItem, ...data } : breakItem
+                  )
+                }
+              : timetable
+          )
+        }));
+      },
+      
+      deleteBreak: (timetableId, id) => {
+        set((state) => ({
+          timetables: state.timetables.map((timetable) =>
+            timetable.id === timetableId
+              ? {
+                  ...timetable,
+                  breaks: (timetable.breaks || []).filter((b) => b.id !== id)
                 }
               : timetable
           )

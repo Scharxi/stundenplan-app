@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { Check, ChevronsUpDown } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -56,12 +56,18 @@ export function TimetableEntryDialog({
   const [isSubjectFormOpen, setIsSubjectFormOpen] = useState(false);
   
   const activeTimetable = timetables.find((t) => t.id === activeTimetableId);
-  const entry = entryId && activeTimetable 
-    ? activeTimetable.entries.find((e) => e.id === entryId) 
-    : null;
+  
+  // Use useMemo to prevent recalculation on every render
+  const entry = useMemo(() => {
+    return entryId && activeTimetable 
+      ? activeTimetable.entries.find((e) => e.id === entryId) 
+      : null;
+  }, [entryId, activeTimetable]);
   
   // Wenn ein Eintrag bearbeitet wird, lade die Daten
   useEffect(() => {
+    if (!open) return; // Only run when dialog is open
+    
     if (entry) {
       setSelectedSubjectId(entry.subjectId);
       setNotes(entry.notes || "");

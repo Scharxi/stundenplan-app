@@ -12,6 +12,13 @@ export interface Subject {
   room?: string;
 }
 
+export interface Break {
+  id: string;
+  name: string;
+  timeSlotId: string;
+  days: Day[];
+}
+
 export interface TimetableEntry {
   id: string;
   day: Day;
@@ -26,6 +33,7 @@ export interface Timetable {
   entries: TimetableEntry[];
   timeSlots: TimeSlot[];
   subjects: Subject[];
+  breaks: Break[];
 }
 
 export type Day = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';

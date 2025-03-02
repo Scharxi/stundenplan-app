@@ -22,10 +22,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 
 import { useTimetableStore } from "@/lib/store";
+import { DAY_LABELS, Day } from "@/lib/types";
 import { sortTimeSlots } from "@/lib/utils";
 import { TimetableForm } from "./timetable-form";
 import { TimeSlotForm } from "./time-slot-form";
 import { SubjectForm } from "./subject-form";
+import { BreakForm } from "./break-form";
 import { TimetableGrid } from "./timetable-grid";
 
 export function TimetableManager() {
@@ -34,8 +36,10 @@ export function TimetableManager() {
   const [isTimetableFormOpen, setIsTimetableFormOpen] = useState(false);
   const [isTimeSlotFormOpen, setIsTimeSlotFormOpen] = useState(false);
   const [isSubjectFormOpen, setIsSubjectFormOpen] = useState(false);
+  const [isBreakFormOpen, setIsBreakFormOpen] = useState(false);
   const [selectedTimetableId, setSelectedTimetableId] = useState<string | undefined>(undefined);
   const [selectedTimeSlotId, setSelectedTimeSlotId] = useState<string | undefined>(undefined);
+  const [selectedBreakId, setSelectedBreakId] = useState<string | undefined>(undefined);
   
   const activeTimetable = timetables.find((t) => t.id === activeTimetableId);
   const sortedTimeSlots = activeTimetable ? sortTimeSlots(activeTimetable.timeSlots) : [];
@@ -72,6 +76,21 @@ export function TimetableManager() {
     }
     
     setIsSubjectFormOpen(true);
+  };
+  
+  const handleCreateBreak = () => {
+    if (!activeTimetableId) {
+      toast.error("Bitte wähle zuerst einen Stundenplan aus");
+      return;
+    }
+    
+    setSelectedBreakId(undefined);
+    setIsBreakFormOpen(true);
+  };
+  
+  const handleEditBreak = (id: string) => {
+    setSelectedBreakId(id);
+    setIsBreakFormOpen(true);
   };
   
   const handleSelectTimetable = (id: string) => {
@@ -272,6 +291,69 @@ export function TimetableManager() {
                 </Button>
               </CardFooter>
             </Card>
+            
+            {/* Pausen */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Pausen</CardTitle>
+                <CardDescription>
+                  Verwalte die Pausen für den aktiven Stundenplan
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {!activeTimetable ? (
+                  <p className="text-muted-foreground">
+                    Kein Stundenplan ausgewählt
+                  </p>
+                ) : !activeTimetable.breaks || activeTimetable.breaks.length === 0 ? (
+                  <p className="text-muted-foreground">
+                    Keine Pausen vorhanden
+                  </p>
+                ) : (
+                  activeTimetable.breaks.map((breakItem) => {
+                    const timeSlot = activeTimetable.timeSlots.find(
+                      (ts) => ts.id === breakItem.timeSlotId
+                    );
+                    
+                    return (
+                      <div
+                        key={breakItem.id}
+                        className="flex items-center justify-between p-2 rounded-md hover:bg-muted"
+                      >
+                        <div className="flex flex-col">
+                          <span className="font-medium">{breakItem.name}</span>
+                          {timeSlot && (
+                            <span className="text-xs text-muted-foreground">
+                              {timeSlot.startTime} - {timeSlot.endTime}
+                            </span>
+                          )}
+                          <span className="text-xs text-muted-foreground">
+                            {breakItem.days.map((day) => DAY_LABELS[day]).join(", ")}
+                          </span>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleEditBreak(breakItem.id)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    );
+                  })
+                )}
+              </CardContent>
+              <CardFooter>
+                <Button
+                  onClick={handleCreateBreak}
+                  className="w-full"
+                  disabled={!activeTimetable}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Neue Pause
+                </Button>
+              </CardFooter>
+            </Card>
           </div>
         </TabsContent>
       </Tabs>
@@ -304,6 +386,12 @@ export function TimetableManager() {
           toast.success("Fach hinzugefügt");
           return id;
         }}
+      />
+      
+      <BreakForm
+        open={isBreakFormOpen}
+        onOpenChange={setIsBreakFormOpen}
+        breakId={selectedBreakId}
       />
     </div>
   );
