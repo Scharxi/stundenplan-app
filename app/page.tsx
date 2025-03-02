@@ -1,199 +1,210 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
 import { TimetableManager } from "@/components/timetable/timetable-manager";
 import { Toaster } from "sonner";
 import { useTimetableStore } from "@/lib/store";
 
 export default function Home() {
+  const [isLoaded, setIsLoaded] = useState(false);
   const store = useTimetableStore();
-  const initialized = useRef(false);
 
-  // Erstelle einen Beispiel-Stundenplan, wenn noch keiner existiert
+  // Beispieldaten erstellen, wenn keine vorhanden sind
   useEffect(() => {
-    // Prevent the effect from running more than once
-    if (initialized.current) return;
-    
     if (store.timetables.length === 0) {
-      console.log("Erstelle Beispiel-Stundenplan...");
-      initialized.current = true;
+      console.log("Erstelle Beispieldaten...");
       
-      // Erstelle einen neuen Stundenplan
-      store.createTimetable("Mein Stundenplan");
+      // Stundenplan erstellen
+      const timetableId = store.createTimetable("Mein Stundenplan");
       
-      // Hole die ID des erstellten Stundenplans
-      const timetableId = store.timetables[0]?.id;
+      console.log("Stundenplan erstellt:", timetableId);
       
-      if (timetableId) {
-        console.log("Timetable ID:", timetableId);
-        
-        // Füge Zeitslots hinzu
-        const timeSlot1 = store.addTimeSlot(timetableId, { startTime: "08:00", endTime: "08:45" });
-        const timeSlot2 = store.addTimeSlot(timetableId, { startTime: "08:50", endTime: "09:35" });
-        const timeSlot3 = store.addTimeSlot(timetableId, { startTime: "09:50", endTime: "10:35" });
-        const timeSlot4 = store.addTimeSlot(timetableId, { startTime: "10:40", endTime: "11:25" });
-        const timeSlot5 = store.addTimeSlot(timetableId, { startTime: "11:40", endTime: "12:25" });
-        const timeSlot6 = store.addTimeSlot(timetableId, { startTime: "12:30", endTime: "13:15" });
-        
-        console.log("Zeitslots erstellt:", timeSlot1, timeSlot2, timeSlot3, timeSlot4, timeSlot5, timeSlot6);
-        
-        // Füge Fächer hinzu
-        const mathId = store.addSubject(timetableId, { 
-          name: "Mathematik", 
-          color: "bg-blue-100 text-blue-800 border-blue-200",
-          teacher: "Herr Schmidt",
-          room: "A101"
-        });
-        
-        const deutschId = store.addSubject(timetableId, { 
-          name: "Deutsch", 
-          color: "bg-red-100 text-red-800 border-red-200",
-          teacher: "Frau Müller",
-          room: "B203"
-        });
-        
-        const englishId = store.addSubject(timetableId, { 
-          name: "Englisch", 
-          color: "bg-green-100 text-green-800 border-green-200",
-          teacher: "Frau Johnson",
-          room: "C305"
-        });
-        
-        const physicsId = store.addSubject(timetableId, { 
-          name: "Physik", 
-          color: "bg-purple-100 text-purple-800 border-purple-200",
-          teacher: "Herr Weber",
-          room: "D107"
-        });
-        
-        const chemistryId = store.addSubject(timetableId, { 
-          name: "Chemie", 
-          color: "bg-yellow-100 text-yellow-800 border-yellow-200",
-          teacher: "Frau Becker",
-          room: "E210"
-        });
-        
-        const biologyId = store.addSubject(timetableId, { 
-          name: "Biologie", 
-          color: "bg-pink-100 text-pink-800 border-pink-200",
-          teacher: "Herr Fischer",
-          room: "F112"
-        });
-        
-        console.log("Fächer erstellt:", mathId, deutschId, englishId, physicsId, chemistryId, biologyId);
-        
-        // Füge Beispiel-Einträge hinzu
-        const entry1 = store.addEntry(timetableId, {
-          day: "monday",
-          timeSlotId: timeSlot1,
-          subjectId: mathId,
-          notes: "Hausaufgaben nicht vergessen"
-        });
-        
-        const entry2 = store.addEntry(timetableId, {
-          day: "monday",
-          timeSlotId: timeSlot2,
-          subjectId: deutschId
-        });
-        
-        const entry3 = store.addEntry(timetableId, {
-          day: "tuesday",
-          timeSlotId: timeSlot1,
-          subjectId: englishId,
-          notes: "Vokabeltest"
-        });
-        
-        const entry4 = store.addEntry(timetableId, {
-          day: "wednesday",
-          timeSlotId: timeSlot3,
-          subjectId: physicsId
-        });
-        
-        const entry5 = store.addEntry(timetableId, {
-          day: "thursday",
-          timeSlotId: timeSlot4,
-          subjectId: chemistryId,
-          notes: "Labor-Experiment"
-        });
-        
-        const entry6 = store.addEntry(timetableId, {
-          day: "friday",
-          timeSlotId: timeSlot5,
-          subjectId: biologyId
-        });
-        
-        const entry7 = store.addEntry(timetableId, {
-          day: "friday",
-          timeSlotId: timeSlot6,
-          subjectId: mathId,
-          notes: "Wiederholung für die Klausur"
-        });
-        
-        console.log("Einträge erstellt:", entry1, entry2, entry3, entry4, entry5, entry6, entry7);
-        
-        // Füge Beispiel-Pausen hinzu
-        const break1 = store.addBreak(timetableId, {
-          name: "Große Pause",
-          timeSlotId: timeSlot3,
-          days: ["monday", "tuesday", "wednesday", "thursday", "friday"]
-        });
-        
-        const break2 = store.addBreak(timetableId, {
-          name: "Mittagspause",
-          timeSlotId: timeSlot5,
-          days: ["monday", "wednesday", "thursday"]
-        });
-        
-        console.log("Pausen erstellt:", break1, break2);
-        
-        // Setze den aktiven Stundenplan
-        store.setActiveTimetable(timetableId);
-        console.log("Aktiver Stundenplan gesetzt:", timetableId);
-      }
-    } else if (!initialized.current) {
-      initialized.current = true;
-      
-      // Aktualisiere bestehende Fächer, falls sie keine Farbe, Lehrer oder Raum haben
-      store.timetables.forEach(timetable => {
-        timetable.subjects.forEach(subject => {
-          const needsUpdate = !subject.color || !subject.teacher || !subject.room;
-          
-          if (needsUpdate) {
-            console.log(`Aktualisiere Fach: ${subject.name} (${subject.id})`);
-            
-            // Standardwerte für fehlende Eigenschaften
-            const defaultColors = [
-              "bg-blue-100 text-blue-800 border-blue-200",
-              "bg-red-100 text-red-800 border-red-200",
-              "bg-green-100 text-green-800 border-green-200",
-              "bg-purple-100 text-purple-800 border-purple-200",
-              "bg-yellow-100 text-yellow-800 border-yellow-200",
-              "bg-pink-100 text-pink-800 border-pink-200"
-            ];
-            
-            const defaultTeachers = [
-              "Herr Schmidt", "Frau Müller", "Herr Weber", 
-              "Frau Becker", "Herr Fischer", "Frau Johnson"
-            ];
-            
-            const defaultRooms = [
-              "A101", "B203", "C305", "D107", "E210", "F112"
-            ];
-            
-            // Zufällige Auswahl für fehlende Werte
-            const randomIndex = Math.floor(Math.random() * defaultColors.length);
-            
-            store.updateSubject(timetable.id, subject.id, {
-              color: subject.color || defaultColors[randomIndex],
-              teacher: subject.teacher || defaultTeachers[randomIndex],
-              room: subject.room || defaultRooms[randomIndex]
-            });
-          }
-        });
+      // Zeitslots erstellen
+      const timeSlot1 = store.addTimeSlot(timetableId, {
+        startTime: "08:00",
+        endTime: "08:45"
       });
+      
+      const timeSlot2 = store.addTimeSlot(timetableId, {
+        startTime: "08:50",
+        endTime: "09:35"
+      });
+      
+      const timeSlot3 = store.addTimeSlot(timetableId, {
+        startTime: "09:35",
+        endTime: "09:55"
+      });
+      
+      const timeSlot4 = store.addTimeSlot(timetableId, {
+        startTime: "09:55",
+        endTime: "10:40"
+      });
+      
+      const timeSlot5 = store.addTimeSlot(timetableId, {
+        startTime: "10:45",
+        endTime: "11:30"
+      });
+      
+      const timeSlot6 = store.addTimeSlot(timetableId, {
+        startTime: "11:35",
+        endTime: "12:20"
+      });
+      
+      console.log("Zeitslots erstellt");
+      
+      // Fächer erstellen
+      const subject1 = store.addSubject(timetableId, {
+        name: "Mathematik",
+        color: "bg-red-200 text-red-800 border-red-300",
+        teacher: "Herr Schmidt",
+        room: "R101"
+      });
+      
+      const subject2 = store.addSubject(timetableId, {
+        name: "Deutsch",
+        color: "bg-blue-200 text-blue-800 border-blue-300",
+        teacher: "Frau Müller",
+        room: "R102"
+      });
+      
+      const subject3 = store.addSubject(timetableId, {
+        name: "Englisch",
+        color: "bg-green-200 text-green-800 border-green-300",
+        teacher: "Herr Johnson",
+        room: "R103"
+      });
+      
+      const subject4 = store.addSubject(timetableId, {
+        name: "Biologie",
+        color: "bg-yellow-200 text-yellow-800 border-yellow-300",
+        teacher: "Frau Weber",
+        room: "R104"
+      });
+      
+      const subject5 = store.addSubject(timetableId, {
+        name: "Geschichte",
+        color: "bg-purple-200 text-purple-800 border-purple-300",
+        teacher: "Herr Meyer",
+        room: "R105"
+      });
+      
+      console.log("Fächer erstellt");
+      
+      // Einträge erstellen
+      store.addEntry(timetableId, {
+        day: "monday",
+        timeSlotId: timeSlot1,
+        subjectId: subject1,
+      });
+      
+      store.addEntry(timetableId, {
+        day: "monday",
+        timeSlotId: timeSlot2,
+        subjectId: subject2,
+      });
+      
+      store.addEntry(timetableId, {
+        day: "monday",
+        timeSlotId: timeSlot4,
+        subjectId: subject3,
+      });
+      
+      store.addEntry(timetableId, {
+        day: "tuesday",
+        timeSlotId: timeSlot1,
+        subjectId: subject4,
+      });
+      
+      store.addEntry(timetableId, {
+        day: "tuesday",
+        timeSlotId: timeSlot2,
+        subjectId: subject5,
+      });
+      
+      store.addEntry(timetableId, {
+        day: "wednesday",
+        timeSlotId: timeSlot1,
+        subjectId: subject1,
+      });
+      
+      store.addEntry(timetableId, {
+        day: "wednesday",
+        timeSlotId: timeSlot2,
+        subjectId: subject3,
+      });
+      
+      store.addEntry(timetableId, {
+        day: "thursday",
+        timeSlotId: timeSlot1,
+        subjectId: subject2,
+      });
+      
+      store.addEntry(timetableId, {
+        day: "thursday",
+        timeSlotId: timeSlot2,
+        subjectId: subject4,
+      });
+      
+      store.addEntry(timetableId, {
+        day: "friday",
+        timeSlotId: timeSlot1,
+        subjectId: subject5,
+      });
+      
+      store.addEntry(timetableId, {
+        day: "friday",
+        timeSlotId: timeSlot2,
+        subjectId: subject1,
+      });
+      
+      console.log("Einträge erstellt");
+      
+      // Pausen erstellen
+      store.addBreak(timetableId, {
+        name: "Große Pause",
+        timeSlotId: timeSlot3,
+        days: ["monday", "tuesday", "wednesday", "thursday", "friday"],
+      });
+      
+      store.addBreak(timetableId, {
+        name: "Mittagspause",
+        timeSlotId: timeSlot5,
+        days: ["monday", "wednesday", "thursday"],
+      });
+      
+      console.log("Pausen erstellt");
+      
+      // Freiblöcke erstellen
+      store.addFreeBlock(timetableId, {
+        description: "Lernzeit",
+        timeSlotId: timeSlot6,
+        days: ["monday", "wednesday"],
+        color: "bg-emerald-200 text-emerald-800 border-emerald-300",
+      });
+      
+      store.addFreeBlock(timetableId, {
+        description: "Sport AG",
+        timeSlotId: timeSlot4,
+        days: ["friday"],
+        color: "bg-orange-200 text-orange-800 border-orange-300",
+      });
+      
+      console.log("Freiblöcke erstellt");
     }
-  }, []); // Empty dependency array - run only once on mount
-
+    
+    setIsLoaded(true);
+  }, [store]);
+  
+  const resetLocalStorage = () => {
+    localStorage.clear();
+    window.location.reload();
+  };
+  
+  if (!isLoaded) {
+    return <div>Lade...</div>;
+  }
+  
   return (
     <div className="min-h-screen bg-background">
       <Toaster position="top-right" />
@@ -203,6 +214,11 @@ export default function Home() {
         </div>
       </header>
       <main>
+        <div className="fixed bottom-4 right-4 z-50">
+          <Button variant="outline" onClick={resetLocalStorage}>
+            Daten zurücksetzen
+          </Button>
+        </div>
         <TimetableManager />
       </main>
     </div>

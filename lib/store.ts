@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
-import { Day, Subject, TimeSlot, Timetable, TimetableEntry, Break } from './types';
+import { Day, Subject, TimeSlot, Timetable, TimetableEntry, Break, FreeBlock } from './types';
 
 interface TimetableState {
   timetables: Timetable[];
@@ -32,6 +32,11 @@ interface TimetableState {
   addBreak: (timetableId: string, breakItem: Omit<Break, 'id'>) => string;
   updateBreak: (timetableId: string, id: string, data: Partial<Omit<Break, 'id'>>) => void;
   deleteBreak: (timetableId: string, id: string) => void;
+  
+  // FreeBlock actions
+  addFreeBlock: (timetableId: string, freeBlock: Omit<FreeBlock, 'id'>) => string;
+  updateFreeBlock: (timetableId: string, id: string, data: Partial<Omit<FreeBlock, 'id'>>) => void;
+  deleteFreeBlock: (timetableId: string, id: string) => void;
 }
 
 export const useTimetableStore = create<TimetableState>()(
@@ -51,7 +56,8 @@ export const useTimetableStore = create<TimetableState>()(
               entries: [],
               timeSlots: [],
               subjects: [],
-              breaks: []
+              breaks: [],
+              freeBlocks: []
             }
           ],
           activeTimetableId: state.activeTimetableId || id
@@ -253,6 +259,50 @@ export const useTimetableStore = create<TimetableState>()(
               ? {
                   ...timetable,
                   breaks: (timetable.breaks || []).filter((b) => b.id !== id)
+                }
+              : timetable
+          )
+        }));
+      },
+      
+      // FreeBlock actions
+      addFreeBlock: (timetableId, freeBlock) => {
+        const id = uuidv4();
+        set((state) => ({
+          timetables: state.timetables.map((timetable) =>
+            timetable.id === timetableId
+              ? {
+                  ...timetable,
+                  freeBlocks: [...(timetable.freeBlocks || []), { id, ...freeBlock }]
+                }
+              : timetable
+          )
+        }));
+        return id;
+      },
+      
+      updateFreeBlock: (timetableId, id, data) => {
+        set((state) => ({
+          timetables: state.timetables.map((timetable) =>
+            timetable.id === timetableId
+              ? {
+                  ...timetable,
+                  freeBlocks: (timetable.freeBlocks || []).map((freeBlock) =>
+                    freeBlock.id === id ? { ...freeBlock, ...data } : freeBlock
+                  )
+                }
+              : timetable
+          )
+        }));
+      },
+      
+      deleteFreeBlock: (timetableId, id) => {
+        set((state) => ({
+          timetables: state.timetables.map((timetable) =>
+            timetable.id === timetableId
+              ? {
+                  ...timetable,
+                  freeBlocks: (timetable.freeBlocks || []).filter((fb) => fb.id !== id)
                 }
               : timetable
           )

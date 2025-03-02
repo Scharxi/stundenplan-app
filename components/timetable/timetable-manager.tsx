@@ -22,12 +22,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 
 import { useTimetableStore } from "@/lib/store";
-import { DAY_LABELS, Day } from "@/lib/types";
+import { DAY_LABELS } from "@/lib/types";
 import { sortTimeSlots } from "@/lib/utils";
 import { TimetableForm } from "./timetable-form";
 import { TimeSlotForm } from "./time-slot-form";
 import { SubjectForm } from "./subject-form";
 import { BreakForm } from "./break-form";
+import { FreeBlockForm } from "./free-block-form";
 import { TimetableGrid } from "./timetable-grid";
 
 export function TimetableManager() {
@@ -37,9 +38,11 @@ export function TimetableManager() {
   const [isTimeSlotFormOpen, setIsTimeSlotFormOpen] = useState(false);
   const [isSubjectFormOpen, setIsSubjectFormOpen] = useState(false);
   const [isBreakFormOpen, setIsBreakFormOpen] = useState(false);
+  const [isFreeBlockFormOpen, setIsFreeBlockFormOpen] = useState(false);
   const [selectedTimetableId, setSelectedTimetableId] = useState<string | undefined>(undefined);
   const [selectedTimeSlotId, setSelectedTimeSlotId] = useState<string | undefined>(undefined);
   const [selectedBreakId, setSelectedBreakId] = useState<string | undefined>(undefined);
+  const [selectedFreeBlockId, setSelectedFreeBlockId] = useState<string | undefined>(undefined);
   
   const activeTimetable = timetables.find((t) => t.id === activeTimetableId);
   const sortedTimeSlots = activeTimetable ? sortTimeSlots(activeTimetable.timeSlots) : [];
@@ -91,6 +94,21 @@ export function TimetableManager() {
   const handleEditBreak = (id: string) => {
     setSelectedBreakId(id);
     setIsBreakFormOpen(true);
+  };
+  
+  const handleCreateFreeBlock = () => {
+    if (!activeTimetableId) {
+      toast.error("Bitte wähle zuerst einen Stundenplan aus");
+      return;
+    }
+    
+    setSelectedFreeBlockId(undefined);
+    setIsFreeBlockFormOpen(true);
+  };
+  
+  const handleEditFreeBlock = (id: string) => {
+    setSelectedFreeBlockId(id);
+    setIsFreeBlockFormOpen(true);
   };
   
   const handleSelectTimetable = (id: string) => {
@@ -354,6 +372,76 @@ export function TimetableManager() {
                 </Button>
               </CardFooter>
             </Card>
+            
+            {/* Freiblöcke */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Freiblöcke</CardTitle>
+                <CardDescription>
+                  Verwalte die Freiblöcke für den aktiven Stundenplan
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {!activeTimetable ? (
+                  <p className="text-muted-foreground">
+                    Kein Stundenplan ausgewählt
+                  </p>
+                ) : !activeTimetable.freeBlocks || activeTimetable.freeBlocks.length === 0 ? (
+                  <p className="text-muted-foreground">
+                    Keine Freiblöcke vorhanden
+                  </p>
+                ) : (
+                  activeTimetable.freeBlocks.map((freeBlock) => {
+                    const timeSlot = activeTimetable.timeSlots.find(
+                      (ts) => ts.id === freeBlock.timeSlotId
+                    );
+                    
+                    return (
+                      <div
+                        key={freeBlock.id}
+                        className="flex items-center justify-between p-2 rounded-md hover:bg-muted"
+                      >
+                        <div className="flex flex-col">
+                          <div className="flex items-center">
+                            <div
+                              className={`h-3 w-3 rounded-full mr-2 ${
+                                freeBlock.color?.split(" ")[0]
+                              }`}
+                            />
+                            <span className="font-medium">{freeBlock.description || "Freiblock"}</span>
+                          </div>
+                          {timeSlot && (
+                            <span className="text-xs text-muted-foreground">
+                              {timeSlot.startTime} - {timeSlot.endTime}
+                            </span>
+                          )}
+                          <span className="text-xs text-muted-foreground">
+                            {freeBlock.days.map((day) => DAY_LABELS[day]).join(", ")}
+                          </span>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleEditFreeBlock(freeBlock.id)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    );
+                  })
+                )}
+              </CardContent>
+              <CardFooter>
+                <Button
+                  onClick={handleCreateFreeBlock}
+                  className="w-full"
+                  disabled={!activeTimetable}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Neuer Freiblock
+                </Button>
+              </CardFooter>
+            </Card>
           </div>
         </TabsContent>
       </Tabs>
@@ -392,6 +480,12 @@ export function TimetableManager() {
         open={isBreakFormOpen}
         onOpenChange={setIsBreakFormOpen}
         breakId={selectedBreakId}
+      />
+      
+      <FreeBlockForm
+        open={isFreeBlockFormOpen}
+        onOpenChange={setIsFreeBlockFormOpen}
+        freeBlockId={selectedFreeBlockId}
       />
     </div>
   );

@@ -19,6 +19,14 @@ export interface Break {
   days: Day[];
 }
 
+export interface FreeBlock {
+  id: string;
+  description?: string;
+  timeSlotId: string;
+  days: Day[];
+  color?: string;
+}
+
 export interface TimetableEntry {
   id: string;
   day: Day;
@@ -34,6 +42,7 @@ export interface Timetable {
   timeSlots: TimeSlot[];
   subjects: Subject[];
   breaks: Break[];
+  freeBlocks: FreeBlock[];
 }
 
 export type Day = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';

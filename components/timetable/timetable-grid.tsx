@@ -2,13 +2,13 @@
 
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { Plus, RefreshCw, Coffee } from "lucide-react";
+import { Plus, RefreshCw, Coffee, Clock } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 import { useTimetableStore } from "@/lib/store";
-import { DAY_LABELS, DAYS, Day, Subject, TimetableEntry } from "@/lib/types";
+import { DAY_LABELS, DAYS, Day, Subject, TimetableEntry, FreeBlock } from "@/lib/types";
 import { getCellId, sortTimeSlots } from "@/lib/utils";
 import { TimetableEntryDialog } from "@/components/timetable/timetable-entry-dialog";
 
@@ -63,6 +63,11 @@ const SUBJECT_COLORS: Record<string, { bg: string, text: string, border: string 
     bg: "#cffafe", // cyan-100
     text: "#155e75", // cyan-800
     border: "#a5f3fc" // cyan-200
+  },
+  "bg-gray-100 text-gray-800 border-gray-200": { 
+    bg: "#f3f4f6", // gray-100
+    text: "#1f2937", // gray-800
+    border: "#e5e7eb" // gray-200
   },
 };
 
@@ -124,6 +129,14 @@ export function TimetableGrid() {
       (breakItem) => breakItem.timeSlotId === timeSlotId && breakItem.days.includes(day)
     );
   };
+  
+  // Hilfsfunktion zum Finden eines Freiblocks für einen bestimmten Tag und Zeitslot
+  const findFreeBlock = (day: Day, timeSlotId: string): FreeBlock | undefined => {
+    if (!activeTimetable || !activeTimetable.freeBlocks) return undefined;
+    return activeTimetable.freeBlocks.find(
+      (freeBlock) => freeBlock.timeSlotId === timeSlotId && freeBlock.days.includes(day)
+    );
+  };
 
   // Hilfsfunktion zum Ermitteln der Farbstile für ein Fach
   const getSubjectColorStyles = (subject: Subject): React.CSSProperties => {
@@ -137,6 +150,28 @@ export function TimetableGrid() {
     }
     
     const colors = SUBJECT_COLORS[subject.color] || { bg: "#f9fafb", text: "#111827", border: "#e5e7eb" };
+    
+    return {
+      backgroundColor: colors.bg,
+      color: colors.text,
+      borderColor: colors.border,
+      borderWidth: "1px",
+      borderStyle: "solid",
+    };
+  };
+  
+  // Hilfsfunktion zum Ermitteln der Farbstile für einen Freiblock
+  const getFreeBlockColorStyles = (freeBlock: FreeBlock): React.CSSProperties => {
+    if (!freeBlock.color) {
+      // Standardfarbe, wenn keine Farbe definiert ist
+      return {
+        backgroundColor: "#f9fafb", // gray-50
+        color: "#111827", // gray-900
+        borderColor: "#e5e7eb", // gray-200
+      };
+    }
+    
+    const colors = SUBJECT_COLORS[freeBlock.color] || { bg: "#f9fafb", text: "#111827", border: "#e5e7eb" };
     
     return {
       backgroundColor: colors.bg,
@@ -180,6 +215,7 @@ export function TimetableGrid() {
             <p><strong>Time Slots:</strong> {activeTimetable.timeSlots.length}</p>
             <p><strong>Subjects:</strong> {activeTimetable.subjects.length}</p>
             <p><strong>Breaks:</strong> {activeTimetable.breaks?.length || 0}</p>
+            <p><strong>Free Blocks:</strong> {activeTimetable.freeBlocks?.length || 0}</p>
             <div className="mt-2">
               <p><strong>Subjects Detail:</strong></p>
               <pre className="text-xs bg-gray-200 p-2 rounded">
@@ -196,6 +232,12 @@ export function TimetableGrid() {
               <p><strong>Breaks Detail:</strong></p>
               <pre className="text-xs bg-gray-200 p-2 rounded">
                 {JSON.stringify(activeTimetable.breaks, null, 2)}
+              </pre>
+            </div>
+            <div className="mt-2">
+              <p><strong>Free Blocks Detail:</strong></p>
+              <pre className="text-xs bg-gray-200 p-2 rounded">
+                {JSON.stringify(activeTimetable.freeBlocks, null, 2)}
               </pre>
             </div>
           </div>
@@ -236,6 +278,7 @@ export function TimetableGrid() {
                 const entry = findEntry(day, timeSlot.id);
                 const subject = entry ? findSubject(entry.subjectId) : undefined;
                 const breakItem = findBreak(day, timeSlot.id);
+                const freeBlock = findFreeBlock(day, timeSlot.id);
 
                 return (
                   <div
@@ -277,6 +320,18 @@ export function TimetableGrid() {
                       >
                         <Coffee className="h-6 w-6 mb-2 text-gray-600" />
                         <div className="font-medium text-sm text-center">{breakItem.name}</div>
+                      </motion.div>
+                    ) : freeBlock ? (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="absolute inset-0 p-2 rounded-md cursor-default transition-all flex flex-col items-center justify-center"
+                        style={getFreeBlockColorStyles(freeBlock)}
+                      >
+                        <Clock className="h-6 w-6 mb-2" />
+                        <div className="font-medium text-sm text-center">
+                          {freeBlock.description || "Freiblock"}
+                        </div>
                       </motion.div>
                     ) : (
                       <TooltipProvider>
