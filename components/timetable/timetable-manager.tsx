@@ -291,14 +291,14 @@ export function TimetableManager() {
       <SubjectForm
         open={isSubjectFormOpen}
         onOpenChange={setIsSubjectFormOpen}
-        onSave={(name) => {
+        onSave={(name, color, teacher, room) => {
           if (!activeTimetableId) return "";
           
           const id = useTimetableStore.getState().addSubject(activeTimetableId, {
             name,
-            color: useTimetableStore.getState().timetables.find(t => t.id === activeTimetableId)?.subjects.length
-              ? useTimetableStore.getState().timetables.find(t => t.id === activeTimetableId)?.subjects[0].color
-              : undefined
+            color,
+            teacher,
+            room
           });
           
           toast.success("Fach hinzugefügt");

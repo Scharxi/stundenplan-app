@@ -30,7 +30,7 @@ import { toast } from "sonner";
 
 import { useTimetableStore } from "@/lib/store";
 import { DAY_LABELS, Day } from "@/lib/types";
-import { cn, getRandomColor } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { SubjectForm } from "./subject-form";
 
 interface TimetableEntryDialogProps {
@@ -129,12 +129,14 @@ export function TimetableEntryDialog({
     }
   };
   
-  const handleAddNewSubject = (name: string) => {
+  const handleAddNewSubject = (name: string, color: string, teacher?: string, room?: string) => {
     if (!activeTimetableId) return "";
     
     const id = addSubject(activeTimetableId, {
       name,
-      color: getRandomColor(),
+      color,
+      teacher,
+      room,
     });
     
     setSelectedSubjectId(id);
@@ -190,11 +192,30 @@ export function TimetableEntryDialog({
                         role="combobox"
                         className="w-full justify-between"
                       >
-                        {selectedSubjectId
-                          ? activeTimetable.subjects.find(
-                              (subject) => subject.id === selectedSubjectId
-                            )?.name || "Fach auswählen"
-                          : "Fach auswählen"}
+                        {selectedSubjectId ? (
+                          <div className="flex items-center">
+                            {(() => {
+                              const subject = activeTimetable.subjects.find(
+                                (s) => s.id === selectedSubjectId
+                              );
+                              return subject ? (
+                                <>
+                                  <div
+                                    className={cn(
+                                      "mr-2 h-3 w-3 rounded-full",
+                                      subject.color?.split(" ")[0]
+                                    )}
+                                  />
+                                  <span>{subject.name}</span>
+                                </>
+                              ) : (
+                                "Fach auswählen"
+                              );
+                            })()}
+                          </div>
+                        ) : (
+                          "Fach auswählen"
+                        )}
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
                     </PopoverTrigger>
